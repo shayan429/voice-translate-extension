@@ -224,6 +224,12 @@ code {
   flex-wrap: wrap;
 }
 
+.hero-note {
+  margin: 22px 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* Screenshot */
 .screenshot-section {
   padding-top: 0;
