@@ -3,8 +3,15 @@
   "name": "Voice Translate & Dictate",
   "version": "1.2.0",
   "description": "Speak in any language, see it transcribed and translated live, hear the translation spoken back, and have it typed automatically into any webpage — including editable fields inside iframes.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsxMDUOA/MDknO+aFRBGvan8F9t1o0Y7K3uMpjdeAlq+LRpA4ABjDGY7aFeDH0u0RAGp4sLo8gbWZHTswLaCzRtOqjf1npylJG5vXsNUYHGOXoz26cWaKSEWQxry50zLVtHi9GQselPeLukr+CACghbv2XaOYjeDqq9eIHbwCGfag2+XSXLIBolYNa2U/Y0uS6KoMkB7VQI2r9fx0h115ToyWvvXX27pJ2M0H17LQnW6OmuCWoFLB6acmRlpwnDenvi6VVXU0FEh2ilP+gEjPUlL/t0Gn/ezj5BaXxysy9v3rBgmNZcVGiFBT5e9ns0M9ozoDhco321KHMm/CeycIXwIDAQAB",
   "permissions": ["storage", "activeTab", "tabs", "sidePanel", "webNavigation", "scripting"],
   "host_permissions": ["<all_urls>"],
+  "externally_connectable": {
+    "matches": [
+      "https://shayan429.github.io/*",
+      "http://localhost:5173/*"
+    ]
+  },
   "action": {
     "default_title": "Open Voice Translator"
   },
