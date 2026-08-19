@@ -119,6 +119,12 @@ code {
 
 .nav-links a:hover { color: var(--text); }
 
+.nav-ctas {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .nav-toggle {
   display: none;
   flex-direction: column;
@@ -376,6 +382,13 @@ code {
 
 #install { text-align: center; }
 
+.install-actions {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
 /* Footer */
 .footer {
   border-top: 3px solid transparent;
@@ -392,6 +405,11 @@ code {
   font-size: 0.9rem;
 }
 
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
 .footer-inner a { text-decoration: none; }
 .footer-inner a:hover { color: var(--text); }
 
@@ -404,7 +422,7 @@ code {
 
 @media (max-width: 720px) {
   .nav-links { display: none; }
-  .nav-cta { display: none; }
+  .nav-ctas { display: none; }
   .nav-toggle { display: flex; }
 
   .nav-links.open {
