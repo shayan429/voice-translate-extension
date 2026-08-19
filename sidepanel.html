@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Voice Translate & Dictate</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header>
+    <h1>🎙️ Voice Translate</h1>
+  </header>
+
+  <div class="lang-row">
+    <div class="lang-group">
+      <label for="sourceLang">Speak in</label>
+      <select id="sourceLang"></select>
+    </div>
+    <button id="swapBtn" title="Swap languages">⇄</button>
+    <div class="lang-group">
+      <label for="targetLang">Translate to</label>
+      <select id="targetLang"></select>
+    </div>
+  </div>
+
+  <div class="mic-row">
+    <button id="micBtn" title="Start/stop dictation" aria-label="Start or stop dictation" aria-pressed="false">
+      <span class="mic-icon" aria-hidden="true">🎤</span>
+    </button>
+    <span id="status">Tap the mic and start speaking.</span>
+  </div>
+
+  <div id="permissionHint" class="page-hint" style="display: none">
+    Chrome can't show the microphone prompt inside this side panel.
+    <button id="grantPermissionBtn" type="button">Allow microphone in a new tab</button>
+  </div>
+
+  <div id="pageHint" class="page-hint" style="display: none"></div>
+
+  <label class="toggle-row">
+    <input type="checkbox" id="autoTypeToggle" checked />
+    <span>Auto-type translation into the page as I speak</span>
+  </label>
+
+  <section class="panel">
+    <h2>You said</h2>
+    <div id="originalText" class="text-box" dir="auto"></div>
+  </section>
+
+  <!-- Translation is typed directly into the page's field, not shown here.
+       Kept as a hidden element so the existing Speak/Copy/Insert/Clear
+       logic still has the text to act on. -->
+  <div id="translatedText" style="display: none" dir="auto"></div>
+
+  <div class="actions">
+    <button id="speakBtn">🔊 Speak</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="insertBtn">✍️ Insert into page</button>
+    <button id="clearBtn">🗑️ Clear</button>
+  </div>
+
+  <footer>
+    <small>Click into the field on the page you want text typed into before or while speaking. If direct typing isn't possible on a site, the translation is copied automatically — paste with Ctrl+V.</small>
+  </footer>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

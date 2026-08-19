@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice Translate & Dictate — Speak, Translate, Type Automatically</title>
+<meta name="description" content="Speak in one language, see it transcribed live, get an instant translation, hear it spoken back, and have it typed automatically into any webpage.">
+<link rel="icon" href="../icons/icon48.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <img src="../icons/icon48.png" alt="" class="brand-icon">
+      <span>Voice Translate &amp; Dictate</span>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a href="#how-it-works">How it works</a>
+      <a href="#features">Features</a>
+      <a href="#limitations">Good to know</a>
+      <a href="#install">Install</a>
+    </nav>
+    <a class="btn btn-primary nav-cta" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Chrome Extension</p>
+      <h1>Speak. Translate. Type — automatically.</h1>
+      <p class="hero-sub">
+        Talk in one language and watch your words land, translated, in any text field on the web —
+        including fields inside iframes. Defaults to Urdu → English, with 19 languages built in.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn-primary btn-lg" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-ghost btn-lg" href="#how-it-works">See how it works</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works" class="section">
+    <h2>How it works</h2>
+    <p class="section-sub">Four steps, all happening live as you talk.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Speak</h3>
+        <p>Click into any text field on a webpage, tap the mic, and start talking in your chosen language.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Transcribe</h3>
+        <p>Your speech appears live under "You said" — gray italic while Chrome is still recognizing it.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Translate</h3>
+        <p>Each chunk is translated in order in the background, in the language you picked to translate to.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h3>Auto-type</h3>
+        <p>With Auto-type on, the translation is typed straight into the field you clicked — no copy-paste needed.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="features" class="section section-alt">
+    <h2>Features</h2>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">🪟</div>
+        <h3>Works across iframes</h3>
+        <p>Comment boxes, chat widgets, and embedded forms often live inside nested iframes. Every frame reports its focused field, so typing lands in exactly the right place.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌍</div>
+        <h3>19 built-in languages</h3>
+        <p>Pick what you speak and what you want it translated to. Your choices are remembered next time you open the panel.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔊</div>
+        <h3>Hear it back</h3>
+        <p>Speak reads the translation aloud using your browser's built-in voices. Copy and Insert into page give you full control too.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">📋</div>
+        <h3>Never leaves you empty-handed</h3>
+        <p>If direct typing fails for any reason, the translation is copied to your clipboard automatically — just paste with Ctrl+V.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔁</div>
+        <h3>Reliable listening</h3>
+        <p>Chrome's speech engine stops after a pause — the extension restarts it automatically, with retry and backoff if something goes wrong.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔢</div>
+        <h3>Correct ordering</h3>
+        <p>Speech chunks are translated one at a time in a queue, so fast talking can't cause pieces to land out of order.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="limitations" class="section">
+    <h2>Good to know</h2>
+    <p class="section-sub">A couple of honest limitations, straight up.</p>
+    <div class="limitations">
+      <div class="limitation">
+        <h3>Google Docs, Sheets &amp; Slides</h3>
+        <p>These render their own canvas instead of a normal text field, so no extension can reliably type into them via standard methods. This extension tries harder and may work for short insertions — and if a direct attempt fails, the translation is copied to your clipboard automatically so you can paste it.</p>
+      </div>
+      <div class="limitation">
+        <h3>Chrome internal pages</h3>
+        <p>Pages like the New Tab Page, <code>chrome://settings</code>, and the Chrome Web Store are special internal addresses that no extension is allowed to type into — a Chrome platform restriction, not a limitation of this extension.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="install" class="section section-alt">
+    <h2>Install (unpacked)</h2>
+    <ol class="install-steps">
+      <li>Download and unzip the extension folder somewhere permanent — Chrome loads it from these files, so don't delete it later.</li>
+      <li>Go to <code>chrome://extensions</code>.</li>
+      <li>Turn on <strong>Developer mode</strong> (top right).</li>
+      <li>Click <strong>Load unpacked</strong> and select the extension folder.</li>
+      <li>Click the extension icon in your toolbar — it opens a side panel, ready to go.</li>
+    </ol>
+    <a class="btn btn-primary btn-lg" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Voice Translate &amp; Dictate</span>
+    <a href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

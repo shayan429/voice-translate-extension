@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Voice Translate & Dictate",
+  "version": "1.2.0",
+  "description": "Speak in any language, see it transcribed and translated live, hear the translation spoken back, and have it typed automatically into any webpage — including editable fields inside iframes.",
+  "permissions": ["storage", "activeTab", "tabs", "sidePanel", "webNavigation", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_title": "Open Voice Translator"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
