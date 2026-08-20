@@ -59,3 +59,31 @@ chrome.webNavigation?.onCommitted?.addListener((details) => {
     chrome.storage.session.remove(`frame_${details.tabId}`);
   }
 });
+
+// Lets the landing page (see externally_connectable in manifest.json) detect
+// whether this extension is installed, and ask it to open the side panel,
+// without granting the page any extra permissions.
+chrome.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+  if (message?.type === "ping") {
+    sendResponse({ installed: true, version: chrome.runtime.getManifest().version });
+    return false;
+  }
+
+  if (message?.type === "openPanel" && sender.tab?.windowId != null) {
+    chrome.sidePanel
+      .open({ windowId: sender.tab.windowId })
+      .then(() => sendResponse({ ok: true }))
+      .catch(() => sendResponse({ ok: false }));
+    return true; // keep the message channel open for the async response
+  }
+
+  return false;
+});
+
+// Send first-time installs back to the landing page so the "Install" button
+// there can flip to "Installed" without the user having to do anything.
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install") {
+    chrome.tabs.create({ url: "https://shayan429.github.io/voice-translate-extension/?installed=1" });
+  }
+});

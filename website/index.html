@@ -24,7 +24,8 @@
     </nav>
     <div class="nav-ctas">
       <a class="btn btn-ghost nav-cta" href="https://shayan429.github.io/voice-translate-extension/" target="_blank" rel="noopener">Live Demo</a>
-      <a class="btn btn-primary nav-cta" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+      <a class="btn btn-ghost nav-cta" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+      <a class="btn btn-primary nav-cta" href="#install" data-install-btn data-compact>Install</a>
     </div>
     <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
       <span></span><span></span><span></span>
@@ -43,10 +44,11 @@
         including fields inside iframes. Defaults to Urdu → English, with 19 languages built in.
       </p>
       <div class="hero-actions">
-        <a class="btn btn-primary btn-lg" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
+        <a class="btn btn-primary btn-lg" href="#install" data-install-btn>Install Voice Translate</a>
+        <a class="btn btn-ghost btn-lg" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
         <a class="btn btn-ghost btn-lg" href="https://shayan429.github.io/voice-translate-extension/" target="_blank" rel="noopener">Live Demo</a>
-        <a class="btn btn-ghost btn-lg" href="#how-it-works">See how it works</a>
       </div>
+      <p class="hero-note" data-install-note>Free and open-source.</p>
     </div>
   </section>
 
@@ -135,18 +137,30 @@
     </div>
   </section>
 
-  <section id="install" class="section section-alt">
-    <h2>Install (unpacked)</h2>
-    <ol class="install-steps">
-      <li>Download and unzip the extension folder somewhere permanent — Chrome loads it from these files, so don't delete it later.</li>
-      <li>Go to <code>chrome://extensions</code>.</li>
-      <li>Turn on <strong>Developer mode</strong> (top right).</li>
-      <li>Click <strong>Load unpacked</strong> and select the extension folder.</li>
-      <li>Click the extension icon in your toolbar — it opens a side panel, ready to go.</li>
-    </ol>
-    <div class="install-actions">
-      <a class="btn btn-primary btn-lg" href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">View on GitHub</a>
-      <a class="btn btn-ghost btn-lg" href="https://shayan429.github.io/voice-translate-extension/" target="_blank" rel="noopener">Live Demo</a>
+  <section id="install" class="section section-alt install-section">
+    <div class="install-card">
+      <img src="icons/icon128.png" alt="" class="install-icon" width="64" height="64">
+      <h2>Install Voice Translate</h2>
+      <p class="install-subtitle">Add Voice Translate &amp; Dictate to your browser in seconds.</p>
+
+      <a class="btn btn-primary btn-xl" href="#install" data-install-btn>Install Voice Translate</a>
+      <p class="install-status-note" data-install-note></p>
+      <a class="btn btn-ghost btn-lg" href="#install" data-open-btn hidden>Open Voice Translate</a>
+
+      <details class="dev-install" data-dev-install>
+        <summary>Developer installation</summary>
+        <div class="dev-install-body">
+          <p>Not on the Chrome Web Store yet, or want the code straight from GitHub? Install it manually:</p>
+          <ol class="install-steps">
+            <li>Click <strong>Download zip</strong> below, then unzip the folder somewhere permanent — Chrome loads it from these files, so don't delete it later.</li>
+            <li>Go to <code>chrome://extensions</code>.</li>
+            <li>Turn on <strong>Developer mode</strong> (top right).</li>
+            <li>Click <strong>Load unpacked</strong> and select the unzipped folder.</li>
+            <li>Click the extension icon in your toolbar — it opens a side panel, ready to go.</li>
+          </ol>
+          <a class="btn btn-ghost" href="https://github.com/shayan429/voice-translate-extension/archive/refs/heads/main.zip" target="_blank" rel="noopener">Download zip</a>
+        </div>
+      </details>
     </div>
   </section>
 
@@ -156,6 +170,7 @@
   <div class="footer-inner">
     <span>Voice Translate &amp; Dictate</span>
     <div class="footer-links">
+      <a href="#install">Install</a>
       <a href="https://shayan429.github.io/voice-translate-extension/" target="_blank" rel="noopener">Live Demo</a>
       <a href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">GitHub</a>
       <a href="privacy.html">Privacy Policy</a>

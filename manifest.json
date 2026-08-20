@@ -2,9 +2,15 @@
   "manifest_version": 3,
   "name": "Voice Translate & Dictate",
   "version": "1.2.0",
-  "description": "Speak in any language, see it transcribed and translated live, hear the translation spoken back, and have it typed automatically into any webpage — including editable fields inside iframes.",
+  "description": "Speak in any language, get live transcription and translation, hear it back, and have it typed automatically into any webpage.",
   "permissions": ["storage", "activeTab", "tabs", "sidePanel", "webNavigation", "scripting"],
   "host_permissions": ["<all_urls>"],
+  "externally_connectable": {
+    "matches": [
+      "https://shayan429.github.io/*",
+      "http://localhost:5173/*"
+    ]
+  },
   "action": {
     "default_title": "Open Voice Translator"
   },
