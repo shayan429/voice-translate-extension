@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — Voice Translate & Dictate</title>
+<meta name="description" content="Privacy policy for the Voice Translate & Dictate Chrome extension.">
+<link rel="icon" href="icons/icon48.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html">
+      <img src="icons/icon48.png" alt="" class="brand-icon">
+      <span>Voice Translate &amp; Dictate</span>
+    </a>
+    <div class="nav-ctas">
+      <a class="btn btn-ghost nav-cta" href="index.html">Back to site</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section legal">
+    <h2>Privacy Policy</h2>
+    <p class="section-sub">Last updated: August 20, 2026</p>
+
+    <div class="legal-body">
+      <p>Voice Translate &amp; Dictate is a Chrome extension that lets you speak in one language, see it transcribed live, get an instant translation, hear it spoken back, and have it typed automatically into a text field on the page you're using. This page explains what data the extension processes and what happens to it.</p>
+
+      <h3>What the extension processes</h3>
+      <p>When you dictate, your speech is converted to text using Chrome's built-in <strong>Web Speech API</strong> — the same engine behind Chrome's native dictation. Audio is handled by Chrome/Google's speech recognition service as part of that browser API; the extension itself never records, stores, or has direct access to raw audio.</p>
+      <p>The recognized text is sent to a <strong>Google Translate</strong> endpoint solely to get a translation back. That text is used only to produce the translation shown to you and typed into your page — it is not logged, stored, or used for any other purpose by this extension.</p>
+
+      <h3>What's stored, and where</h3>
+      <ul>
+        <li><strong>Your language preferences</strong> (speak-in language, translate-to language, and the Auto-type on/off setting) are saved locally in your browser using Chrome's storage API, so they're remembered next time you open the panel. This data stays on your device and is never transmitted anywhere.</li>
+        <li><strong>Which iframe last had a focused text field</strong> on a given tab is kept briefly in session storage, purely so a translation gets typed into the right frame. It's cleared automatically when you navigate or close the tab.</li>
+      </ul>
+
+      <h3>What we don't do</h3>
+      <ul>
+        <li>We don't collect your name, email, or any account information — there are no user accounts.</li>
+        <li>We don't track your browsing history or activity across sites.</li>
+        <li>We don't use analytics, ads, or any third-party tracking scripts.</li>
+        <li>We don't sell, rent, or share any data with third parties, beyond sending the text you dictate to Google's translation service in order to translate it.</li>
+      </ul>
+
+      <h3>Third-party services</h3>
+      <p>Speech recognition and translation rely on Google's services as described above. Their handling of that data is governed by <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</p>
+
+      <h3>Children's privacy</h3>
+      <p>This extension is not directed at children and does not knowingly collect data from children under 13.</p>
+
+      <h3>Changes to this policy</h3>
+      <p>If this policy changes, the update will be posted on this page with a revised "last updated" date.</p>
+
+      <h3>Contact</h3>
+      <p>Questions about this policy or the extension can be raised via <a href="https://github.com/shayan429/voice-translate-extension/issues" target="_blank" rel="noopener">GitHub Issues</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>Voice Translate &amp; Dictate</span>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="https://github.com/shayan429/voice-translate-extension" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

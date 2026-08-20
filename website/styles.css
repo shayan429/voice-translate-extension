@@ -417,6 +417,20 @@ code {
   flex-wrap: wrap;
 }
 
+/* Legal pages */
+.legal { max-width: 760px; }
+.legal h2 { text-align: left; }
+.legal h2::after { margin: 16px 0 0; }
+.legal .section-sub { text-align: left; margin-bottom: 40px; }
+
+.legal-body { color: var(--text-muted); font-size: 1rem; }
+.legal-body h3 { color: var(--text); margin: 32px 0 12px; font-size: 1.1rem; }
+.legal-body h3:first-child { margin-top: 0; }
+.legal-body p { margin: 0 0 16px; }
+.legal-body ul { margin: 0 0 16px; padding-left: 22px; }
+.legal-body li { margin-bottom: 8px; }
+.legal-body a { color: var(--accent); }
+
 /* Footer */
 .footer {
   border-top: 3px solid transparent;
