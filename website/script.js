@@ -14,14 +14,16 @@ navLinks.querySelectorAll('a').forEach((link) => {
 });
 
 // --- Install flow -----------------------------------------------------
-// EXTENSION_ID is fixed via the "key" field in manifest.json, so it's the
-// same ID whether the extension is loaded unpacked or (once published)
-// installed from the Chrome Web Store.
-const EXTENSION_ID = 'kabhpoecanodimagnkmkpjbpjgboajpp';
+// EXTENSION_ID is the real Item ID assigned by the Chrome Web Store
+// dashboard on upload (the Web Store rejects a manifest with a "key"
+// field, so this is not self-chosen — it only applies once installed
+// from the Store, not to a locally loaded unpacked copy).
+const EXTENSION_ID = 'nbdmpdimfockdijnabkijncponkpadfc';
 
-// Fill this in once the listing is live, e.g.
-// 'https://chromewebstore.google.com/detail/kabhpoecanodimagnkmkpjbpjgboajpp'
-const CHROME_WEBSTORE_URL = '';
+// The listing is submitted and pending review — this URL won't resolve
+// publicly until Google approves it, but wiring it up now means nothing
+// else needs to change once it goes live.
+const CHROME_WEBSTORE_URL = 'https://chromewebstore.google.com/detail/nbdmpdimfockdijnabkijncponkpadfc';
 
 function detectBrowser() {
   const ua = navigator.userAgent;
