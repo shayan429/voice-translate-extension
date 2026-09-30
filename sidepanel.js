@@ -3,21 +3,39 @@ const LANGUAGES = [
   { name: "Bengali", code: "bn", speech: "bn-BD" },
   { name: "Chinese (Simplified)", code: "zh-CN", speech: "zh-CN" },
   { name: "Chinese (Traditional)", code: "zh-TW", speech: "zh-TW" },
+  { name: "Czech", code: "cs", speech: "cs-CZ" },
+  { name: "Danish", code: "da", speech: "da-DK" },
+  { name: "Dutch", code: "nl", speech: "nl-NL" },
   { name: "English", code: "en", speech: "en-US" },
   { name: "Farsi / Persian", code: "fa", speech: "fa-IR" },
+  { name: "Filipino", code: "tl", speech: "fil-PH" },
+  { name: "Finnish", code: "fi", speech: "fi-FI" },
   { name: "French", code: "fr", speech: "fr-FR" },
   { name: "German", code: "de", speech: "de-DE" },
+  { name: "Greek", code: "el", speech: "el-GR" },
+  { name: "Hebrew", code: "he", speech: "he-IL" },
   { name: "Hindi", code: "hi", speech: "hi-IN" },
+  { name: "Hungarian", code: "hu", speech: "hu-HU" },
+  { name: "Indonesian", code: "id", speech: "id-ID" },
   { name: "Italian", code: "it", speech: "it-IT" },
   { name: "Japanese", code: "ja", speech: "ja-JP" },
   { name: "Korean", code: "ko", speech: "ko-KR" },
+  { name: "Malay", code: "ms", speech: "ms-MY" },
+  { name: "Norwegian", code: "no", speech: "nb-NO" },
   { name: "Pashto", code: "ps", speech: "ps-AF" },
+  { name: "Polish", code: "pl", speech: "pl-PL" },
   { name: "Portuguese", code: "pt", speech: "pt-PT" },
   { name: "Punjabi", code: "pa", speech: "pa-IN" },
+  { name: "Romanian", code: "ro", speech: "ro-RO" },
   { name: "Russian", code: "ru", speech: "ru-RU" },
   { name: "Spanish", code: "es", speech: "es-ES" },
+  { name: "Swahili", code: "sw", speech: "sw-KE" },
+  { name: "Swedish", code: "sv", speech: "sv-SE" },
+  { name: "Thai", code: "th", speech: "th-TH" },
   { name: "Turkish", code: "tr", speech: "tr-TR" },
+  { name: "Ukrainian", code: "uk", speech: "uk-UA" },
   { name: "Urdu", code: "ur", speech: "ur-PK" },
+  { name: "Vietnamese", code: "vi", speech: "vi-VN" },
 ];
 
 const ERROR_MESSAGES = {
@@ -39,6 +57,7 @@ const micBtn = document.getElementById("micBtn");
 const statusEl = document.getElementById("status");
 const pageHintEl = document.getElementById("pageHint");
 const autoTypeToggle = document.getElementById("autoTypeToggle");
+const conversationModeToggle = document.getElementById("conversationModeToggle");
 const originalTextEl = document.getElementById("originalText");
 const translatedTextEl = document.getElementById("translatedText");
 const speakBtn = document.getElementById("speakBtn");
@@ -70,10 +89,11 @@ function setStatus(text) {
 }
 
 async function loadSettings() {
-  const data = await chrome.storage.local.get(["sourceLang", "targetLang", "autoType"]);
+  const data = await chrome.storage.local.get(["sourceLang", "targetLang", "autoType", "conversationMode"]);
   setSelectValue(sourceLangSelect, data.sourceLang || "ur");
   setSelectValue(targetLangSelect, data.targetLang || "en");
   autoTypeToggle.checked = data.autoType !== false;
+  conversationModeToggle.checked = data.conversationMode === true;
 }
 
 function saveSettings() {
@@ -81,6 +101,7 @@ function saveSettings() {
     sourceLang: sourceLangSelect.value,
     targetLang: targetLangSelect.value,
     autoType: autoTypeToggle.checked,
+    conversationMode: conversationModeToggle.checked,
   });
 }
 
@@ -348,8 +369,20 @@ function stopListening() {
 }
 
 micBtn.addEventListener("click", () => {
-  if (isListening) stopListening();
-  else startListening();
+  if (isListening) {
+    const hadSpeech = finalTranscript.trim().length > 0;
+    stopListening();
+    // Conversation mode: whoever just spoke tapped the mic to end their
+    // turn, so swap languages now — the pair is ready for the other
+    // person to reply on the next tap. Skipped if nothing was actually
+    // said, so an accidental start/stop tap doesn't swap anything.
+    if (conversationModeToggle.checked && hadSpeech) {
+      swapLanguages();
+      setStatus("Swapped for the reply — tap the mic when ready.");
+    }
+  } else {
+    startListening();
+  }
 });
 
 grantPermissionBtn.addEventListener("click", () => {
@@ -537,13 +570,15 @@ insertBtn.addEventListener("click", async () => {
 
 /* ---------- Other controls ---------- */
 
-swapBtn.addEventListener("click", () => {
+function swapLanguages() {
   const s = sourceLangSelect.value;
   const t = targetLangSelect.value;
   setSelectValue(sourceLangSelect, t);
   setSelectValue(targetLangSelect, s);
   saveSettings();
-});
+}
+
+swapBtn.addEventListener("click", swapLanguages);
 
 sourceLangSelect.addEventListener("change", saveSettings);
 targetLangSelect.addEventListener("change", saveSettings);
@@ -551,6 +586,7 @@ autoTypeToggle.addEventListener("change", () => {
   autoTypeWarned = false;
   saveSettings();
 });
+conversationModeToggle.addEventListener("change", saveSettings);
 
 speakBtn.addEventListener("click", () => {
   const text = translatedTextEl.textContent.trim();
