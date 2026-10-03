@@ -1000,7 +1000,7 @@ async function runCommand(name) {
     const result = await pageMessage({ type: "deleteLastWord" });
     setStatus(result.ok ? "Deleted the last word." : "Nothing of mine to delete there.");
   } else if (name === "newLine") {
-    const result = await pageMessage({ type: "newLine" });
+    const result = await pageMessage({ type: "newLine", sid: sessionId });
     if (!result.ok) setStatus("This field can't take a new line.");
   }
 }

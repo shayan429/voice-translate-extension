@@ -1,4 +1,21 @@
 (function () {
+  // Chrome injects this script on page load, and the background script also
+  // re-injects it into already-open tabs after an install or update. If a
+  // working copy is already running, a second one would answer every message
+  // too and type each phrase twice, so stop here. A copy left behind by an
+  // update can no longer reach the extension (chrome.runtime.id is gone), so
+  // it doesn't count and the new one takes over.
+  if (window.__voiceTranslateContent && window.__voiceTranslateContent.alive()) return;
+  window.__voiceTranslateContent = {
+    alive: () => {
+      try {
+        return !!chrome.runtime.id;
+      } catch (err) {
+        return false;
+      }
+    },
+  };
+
   let lastEditable = null;
   // Set when the panel asks to pin the field that was active as dictation
   // started: { el, token }. Inserts that carry the matching token go to this
@@ -97,7 +114,8 @@
   const history = [];
 
   function pushHistory(entry) {
-    if (!entry.text || !entry.text.trim()) return;
+    // Blank text is not worth undoing, except a deliberate new line.
+    if (!entry.text || (!entry.text.trim() && entry.text.indexOf("\n") < 0)) return;
     history.push(entry);
     if (history.length > MAX_HISTORY) history.shift();
   }
@@ -496,8 +514,8 @@
     return { ok: true };
   }
 
-  function insertNewLine(el) {
-    if (el.tagName === "TEXTAREA") return insertInto(el, "\n");
+  function insertNewLine(el, sid) {
+    if (el.tagName === "TEXTAREA") return insertInto(el, "\n", sid);
     if (el.isContentEditable) {
       el.focus();
       try {
@@ -610,7 +628,7 @@
       sendResponse(deleteLastWord());
     } else if (type === "newLine") {
       const target = targetOrRespond(message, sendResponse);
-      if (target) sendResponse({ ok: insertNewLine(target) });
+      if (target) sendResponse({ ok: insertNewLine(target, message.sid) });
     } else if (type === "submitEnter") {
       const target = targetOrRespond(message, sendResponse);
       if (target) sendResponse({ ok: submitEnter(target) });
