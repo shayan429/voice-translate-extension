@@ -414,6 +414,7 @@ let lockPromise = Promise.resolve();
 let submitOnce = false;
 let pendingSubmit = false;
 let pttActive = false;
+let pttReleasedEarly = false; // key let go while the mic was still starting
 const processedPids = new Set();
 const sessionLog = []; // in memory only — built into a file only when "Download transcript" is pressed
 
@@ -813,6 +814,13 @@ async function startListening() {
     lockPromise = prefs.lockField ? acquireLock() : Promise.resolve();
   } finally {
     starting = false;
+  }
+  if (pttReleasedEarly) {
+    pttReleasedEarly = false;
+    if (isListening && pttActive) {
+      pttActive = false;
+      endListeningTurn();
+    }
   }
 }
 
@@ -1338,7 +1346,10 @@ chrome.runtime.onMessage.addListener((message) => {
     // that was already running when the key went down is left alone.
     if (message.down && !isListening && !starting) {
       pttActive = true;
+      pttReleasedEarly = false;
       startListening();
+    } else if (!message.down && pttActive && starting) {
+      pttReleasedEarly = true;
     } else if (!message.down && pttActive && isListening) {
       pttActive = false;
       endListeningTurn();
