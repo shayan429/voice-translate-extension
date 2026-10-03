@@ -30,6 +30,8 @@
     <button id="cancelBtn" type="button" title="Cancel the translation in progress (Esc)" hidden>✕ Cancel</button>
   </div>
 
+  <button id="pttBtn" type="button" hidden>🎙 Hold to talk</button>
+
   <div id="permissionHint" class="page-hint" style="display: none">
     <span id="permissionHintText">Chrome can't show the microphone prompt inside this side panel.</span>
     <button id="grantPermissionBtn" type="button">Allow microphone in a new tab</button>
@@ -101,7 +103,7 @@
           <option value="0.85">Strict (noisy room)</option>
         </select>
       </label>
-      <label class="toggle-row"><input type="checkbox" data-pref="pushToTalk" /><span>Push-to-talk: listen only while I hold the mic button or the key below (keep this panel open)</span></label>
+      <label class="toggle-row"><input type="checkbox" data-pref="pushToTalk" /><span>Push-to-talk: a “Hold to talk” button appears — it listens only while you hold it (or the key below)</span></label>
       <label class="select-row"><span>Push-to-talk key</span>
         <select data-pref="pttKey">
           <option value="F8">F8</option>

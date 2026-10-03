@@ -375,3 +375,31 @@ footer {
     animation: none;
   }
 }
+
+/* ---------- Hold to talk button (push-to-talk mode) ---------- */
+
+#pttBtn {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  padding: 14px 12px;
+  border-radius: 12px;
+  border: 2px solid #4f46e5;
+  background: #eef0ff;
+  color: #3730a3;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+}
+
+#pttBtn[hidden] {
+  display: none;
+}
+
+#pttBtn.held {
+  background: #e5484f;
+  border-color: #e5484f;
+  color: white;
+}

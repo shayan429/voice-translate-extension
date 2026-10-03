@@ -79,6 +79,7 @@ const sourceLangSelect = document.getElementById("sourceLang");
 const targetLangSelect = document.getElementById("targetLang");
 const swapBtn = document.getElementById("swapBtn");
 const micBtn = document.getElementById("micBtn");
+const pttBtn = document.getElementById("pttBtn");
 const cancelBtn = document.getElementById("cancelBtn");
 const statusEl = document.getElementById("status");
 const pageHintEl = document.getElementById("pageHint");
@@ -152,6 +153,7 @@ async function loadSettings() {
   if (!Array.isArray(prefs.savedPairs)) prefs.savedPairs = [];
   glossaryEntries = TextUtils.parseGlossary(prefs.glossary);
   applyPrefsToControls();
+  syncPttUi();
   updateIdleHint();
   renderPairs();
   refreshStats();
@@ -182,6 +184,12 @@ function applyPrefsToControls() {
   }
 }
 
+// Shows the dedicated "Hold to talk" button only while push-to-talk is on.
+function syncPttUi() {
+  pttBtn.hidden = !prefs.pushToTalk;
+  pttBtn.textContent = `🎙 Hold to talk (${prefs.pttKey})`;
+}
+
 // Tells the person how to talk when push-to-talk changes what the mic button does.
 function updateIdleHint() {
   if (isListening || isBusy()) return;
@@ -194,7 +202,15 @@ function onPrefControlChange(el) {
   else if (el.dataset.type === "number") prefs[key] = Number(el.value);
   else prefs[key] = el.value;
   if (key === "glossary") glossaryEntries = TextUtils.parseGlossary(prefs.glossary);
-  if (key === "pushToTalk" || key === "pttKey") updateIdleHint();
+  if (key === "pushToTalk" && el.checked && isListening && !pttActive) {
+    // Switching to push-to-talk while the mic is open: close it so the
+    // person starts from "listens only while held".
+    endListeningTurn();
+  }
+  if (key === "pushToTalk" || key === "pttKey") {
+    syncPttUi();
+    updateIdleHint();
+  }
   savePrefs();
 }
 
@@ -323,6 +339,7 @@ function setMicState(state) {
   micState = state;
   micBtn.dataset.state = state;
   micBtn.classList.toggle("listening", state === "listening");
+  pttBtn.classList.toggle("held", state === "listening");
   micBtn.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
   reportListening(state === "listening");
 }
@@ -1353,7 +1370,13 @@ function handlePanelCommand(name, payload) {
 // Hold to talk: press starts listening, release ends the turn. A mic that
 // was already running when the key went down is left alone.
 function pttDown() {
-  if (isListening || starting) return;
+  if (starting) return;
+  if (isListening) {
+    // The mic was already on (started by a click or a shortcut). Take it
+    // over, so letting go of the key ends it instead of leaving it stuck on.
+    if (!pttActive) pttActive = true;
+    return;
+  }
   pttActive = true;
   pttReleasedEarly = false;
   startListening();
@@ -1396,21 +1419,46 @@ document.addEventListener("keyup", (e) => {
 });
 window.addEventListener("blur", pttUp);
 
-// The mic button itself becomes hold-to-talk while push-to-talk is on.
-micBtn.addEventListener("pointerdown", (e) => {
-  if (!prefs.pushToTalk || e.button !== 0) return;
-  try {
-    micBtn.setPointerCapture(e.pointerId); // so releasing outside the button still counts
-  } catch (err) {
-    /* capture is a nicety */
+// The mic button and the "Hold to talk" button are both hold-to-talk while
+// push-to-talk is on.
+function attachHoldToTalk(btn) {
+  btn.addEventListener("pointerdown", (e) => {
+    if (!prefs.pushToTalk || e.button !== 0) return;
+    if (isListening && !pttActive) {
+      // Already listening from before: a press switches it off, otherwise
+      // push-to-talk mode would give no way to stop it.
+      endListeningTurn();
+      return;
+    }
+    try {
+      btn.setPointerCapture(e.pointerId); // so releasing outside the button still counts
+    } catch (err) {
+      /* capture is a nicety */
+    }
+    pttDown();
+  });
+  btn.addEventListener("pointerup", () => {
+    if (prefs.pushToTalk) pttUp();
+  });
+  btn.addEventListener("pointercancel", () => {
+    if (prefs.pushToTalk) pttUp();
+  });
+}
+attachHoldToTalk(micBtn);
+attachHoldToTalk(pttBtn);
+
+// Keyboard users can hold Space or Enter on the focused "Hold to talk" button.
+pttBtn.addEventListener("keydown", (e) => {
+  if ((e.key === " " || e.key === "Enter") && !e.repeat) {
+    e.preventDefault();
+    pttDown();
   }
-  pttDown();
 });
-micBtn.addEventListener("pointerup", () => {
-  if (prefs.pushToTalk) pttUp();
-});
-micBtn.addEventListener("pointercancel", () => {
-  if (prefs.pushToTalk) pttUp();
+pttBtn.addEventListener("keyup", (e) => {
+  if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    pttUp();
+  }
 });
 
 // A shortcut pressed while the panel was closed opened it; pick up what it asked for.
