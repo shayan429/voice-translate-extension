@@ -649,12 +649,41 @@
     /* storage unavailable — push-to-talk simply stays off */
   }
 
+  // Modifier keys (Ctrl/Shift/Alt) also take part in shortcuts like Ctrl+C,
+  // so they only start push-to-talk when held alone for a moment, and any
+  // other key pressed with them cancels it.
+  let pttModifierTimer = null;
+  const isModifierKey = () => /^(Control|Shift|Alt)(Left|Right)$/.test(ptt.key);
+  const isPttKey = (e) => e.code === ptt.key || e.key === ptt.key;
+
   document.addEventListener(
     "keydown",
     (e) => {
-      if (!ptt.enabled || e.key !== ptt.key) return;
+      if (!ptt.enabled) return;
+      if (!isPttKey(e)) {
+        if (pttModifierTimer) {
+          clearTimeout(pttModifierTimer);
+          pttModifierTimer = null;
+        } else if (pttHeld && isModifierKey()) {
+          releasePtt();
+        }
+        return;
+      }
+      if (e.repeat || pttHeld) {
+        if (!isModifierKey()) e.preventDefault();
+        return;
+      }
+      if (isModifierKey()) {
+        if (!pttModifierTimer) {
+          pttModifierTimer = setTimeout(() => {
+            pttModifierTimer = null;
+            pttHeld = true;
+            chrome.runtime.sendMessage({ type: "ptt", down: true }).catch(() => {});
+          }, 200);
+        }
+        return;
+      }
       e.preventDefault();
-      if (e.repeat || pttHeld) return;
       pttHeld = true;
       chrome.runtime.sendMessage({ type: "ptt", down: true }).catch(() => {});
     },
@@ -663,8 +692,13 @@
   document.addEventListener(
     "keyup",
     (e) => {
-      if (!ptt.enabled || e.key !== ptt.key) return;
-      e.preventDefault();
+      if (!ptt.enabled || !isPttKey(e)) return;
+      if (pttModifierTimer) {
+        clearTimeout(pttModifierTimer);
+        pttModifierTimer = null;
+        return;
+      }
+      if (!isModifierKey()) e.preventDefault();
       releasePtt();
     },
     true

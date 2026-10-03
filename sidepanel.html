@@ -106,9 +106,28 @@
       <label class="toggle-row"><input type="checkbox" data-pref="pushToTalk" /><span>Push-to-talk: a “Hold to talk” button appears — it listens only while you hold it (or the key below)</span></label>
       <label class="select-row"><span>Push-to-talk key</span>
         <select data-pref="pttKey">
-          <option value="F8">F8</option>
-          <option value="F9">F9</option>
-          <option value="F10">F10</option>
+          <optgroup label="Function keys">
+            <option value="F9">F9</option>
+            <option value="F8">F8</option>
+            <option value="F10">F10</option>
+            <option value="F1">F1</option>
+            <option value="F2">F2</option>
+            <option value="F3">F3</option>
+            <option value="F4">F4</option>
+            <option value="F6">F6</option>
+          </optgroup>
+          <optgroup label="Other keys">
+            <option value="Pause">Pause / Break</option>
+            <option value="ScrollLock">Scroll Lock</option>
+            <option value="Insert">Insert</option>
+            <option value="PrintScreen">Print Screen</option>
+            <option value="ContextMenu">Menu key (next to right Ctrl)</option>
+          </optgroup>
+          <optgroup label="Right-side modifier keys (cancelled if you press another key with them)">
+            <option value="ControlRight">Right Ctrl</option>
+            <option value="ShiftRight">Right Shift</option>
+            <option value="AltRight">Right Alt</option>
+          </optgroup>
         </select>
       </label>
       <label class="toggle-row"><input type="checkbox" data-pref="voiceCommands" /><span>Voice commands (English): “clear text”, “delete last word”, “new line”, “stop listening”</span></label>

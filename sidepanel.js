@@ -184,16 +184,40 @@ function applyPrefsToControls() {
   }
 }
 
+// Keys offered for push-to-talk. Only keys that don't type text and don't
+// double as common shortcuts are listed, since the key is captured while held.
+const PTT_KEY_LABELS = {
+  F1: "F1", F2: "F2", F3: "F3", F4: "F4", F6: "F6", F8: "F8", F9: "F9", F10: "F10",
+  Pause: "Pause", ScrollLock: "Scroll Lock", Insert: "Insert", PrintScreen: "Print Screen", ContextMenu: "Menu key",
+  ControlRight: "Right Ctrl", ShiftRight: "Right Shift", AltRight: "Right Alt",
+};
+const PTT_MODIFIER_DELAY_MS = 200;
+let pttModifierTimer = null;
+
+// Modifier keys are also part of shortcuts (Ctrl+C...), so they only start
+// push-to-talk if held alone for a moment; another key pressed with them cancels it.
+function isModifierPttKey() {
+  return /^(Control|Shift|Alt)(Left|Right)$/.test(prefs.pttKey);
+}
+
+function pttKeyLabel() {
+  return PTT_KEY_LABELS[prefs.pttKey] || prefs.pttKey;
+}
+
+function isPttKey(e) {
+  return e.code === prefs.pttKey || e.key === prefs.pttKey;
+}
+
 // Shows the dedicated "Hold to talk" button only while push-to-talk is on.
 function syncPttUi() {
   pttBtn.hidden = !prefs.pushToTalk;
-  pttBtn.textContent = `🎙 Hold to talk (${prefs.pttKey})`;
+  pttBtn.textContent = `🎙 Hold to talk (${pttKeyLabel()})`;
 }
 
 // Tells the person how to talk when push-to-talk changes what the mic button does.
 function updateIdleHint() {
   if (isListening || isBusy()) return;
-  setStatus(prefs.pushToTalk ? `Hold the mic button or ${prefs.pttKey} and speak.` : "Tap the mic and start speaking.");
+  setStatus(prefs.pushToTalk ? `Hold the mic button or ${pttKeyLabel()} and speak.` : "Tap the mic and start speaking.");
 }
 
 function onPrefControlChange(el) {
@@ -1408,13 +1432,38 @@ chrome.runtime.onMessage.addListener((message) => {
 
 // The same key also works while the panel itself has focus.
 document.addEventListener("keydown", (e) => {
-  if (!prefs.pushToTalk || e.key !== prefs.pttKey) return;
+  if (!prefs.pushToTalk) return;
+  if (!isPttKey(e)) {
+    // Another key with a held modifier means a shortcut, not push-to-talk.
+    if (pttModifierTimer) {
+      clearTimeout(pttModifierTimer);
+      pttModifierTimer = null;
+    } else if (pttActive && isModifierPttKey()) {
+      pttUp();
+    }
+    return;
+  }
+  if (e.repeat) return;
+  if (isModifierPttKey()) {
+    if (!pttModifierTimer) {
+      pttModifierTimer = setTimeout(() => {
+        pttModifierTimer = null;
+        pttDown();
+      }, PTT_MODIFIER_DELAY_MS);
+    }
+    return;
+  }
   e.preventDefault();
-  if (!e.repeat) pttDown();
+  pttDown();
 });
 document.addEventListener("keyup", (e) => {
-  if (!prefs.pushToTalk || e.key !== prefs.pttKey) return;
-  e.preventDefault();
+  if (!prefs.pushToTalk || !isPttKey(e)) return;
+  if (pttModifierTimer) {
+    clearTimeout(pttModifierTimer);
+    pttModifierTimer = null;
+    return;
+  }
+  if (!isModifierPttKey()) e.preventDefault();
   pttUp();
 });
 window.addEventListener("blur", pttUp);
