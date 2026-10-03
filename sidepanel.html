@@ -27,14 +27,21 @@
       <span class="mic-icon" aria-hidden="true">🎤</span>
     </button>
     <span id="status">Tap the mic and start speaking.</span>
+    <button id="cancelBtn" type="button" title="Cancel the translation in progress (Esc)" hidden>✕ Cancel</button>
   </div>
 
   <div id="permissionHint" class="page-hint" style="display: none">
-    Chrome can't show the microphone prompt inside this side panel.
+    <span id="permissionHintText">Chrome can't show the microphone prompt inside this side panel.</span>
     <button id="grantPermissionBtn" type="button">Allow microphone in a new tab</button>
+    <button id="openMicSettingsBtn" type="button">Open Chrome's microphone settings</button>
   </div>
 
   <div id="pageHint" class="page-hint" style="display: none"></div>
+
+  <div id="errorAction" class="page-hint" hidden>
+    <span id="errorActionText"></span>
+    <button id="errorActionBtn" type="button"></button>
+  </div>
 
   <label class="toggle-row">
     <input type="checkbox" id="autoTypeToggle" checked />
@@ -63,10 +70,97 @@
     <button id="clearBtn">🗑️ Clear</button>
   </div>
 
+  <details class="settings" id="settingsPanel">
+    <summary>⚙ Settings</summary>
+
+    <div class="setting-group">
+      <h3>Typing</h3>
+      <label class="toggle-row"><input type="checkbox" data-pref="insertAtCursor" /><span>Type at the cursor (replaces selected text)</span></label>
+      <label class="toggle-row"><input type="checkbox" data-pref="lockField" /><span>Stick to the field I started in</span></label>
+      <label class="toggle-row"><input type="checkbox" data-pref="pauseOnTabSwitch" /><span>Pause typing if I switch tabs</span></label>
+      <label class="toggle-row"><input type="checkbox" data-pref="autoSubmit" /><span>Press Enter after typing (use with care)</span></label>
+      <label class="toggle-row"><input type="checkbox" data-pref="autoPunct" /><span>Add ending punctuation (best effort)</span></label>
+    </div>
+
+    <div class="setting-group">
+      <h3>Listening</h3>
+      <label class="toggle-row"><input type="checkbox" data-pref="continuous" /><span>Keep listening between phrases</span></label>
+      <label class="select-row"><span>Wait after I stop talking</span>
+        <select data-pref="silenceMs" data-type="number">
+          <option value="0">Default</option>
+          <option value="600">Shorter (0.6 s)</option>
+          <option value="1000">Short (1 s)</option>
+          <option value="1500">Medium (1.5 s)</option>
+        </select>
+      </label>
+      <label class="select-row"><span>Ignore unclear speech</span>
+        <select data-pref="minConfidence" data-type="number">
+          <option value="0">Off</option>
+          <option value="0.5">Mild</option>
+          <option value="0.7">Medium</option>
+          <option value="0.85">Strict (noisy room)</option>
+        </select>
+      </label>
+      <label class="toggle-row"><input type="checkbox" data-pref="pushToTalk" /><span>Push-to-talk: hold the key below while the page is focused</span></label>
+      <label class="select-row"><span>Push-to-talk key</span>
+        <select data-pref="pttKey">
+          <option value="F8">F8</option>
+          <option value="F9">F9</option>
+          <option value="F10">F10</option>
+        </select>
+      </label>
+      <label class="toggle-row"><input type="checkbox" data-pref="voiceCommands" /><span>Voice commands (English): “clear text”, “delete last word”, “new line”, “stop listening”</span></label>
+    </div>
+
+    <div class="setting-group">
+      <h3>Words</h3>
+      <label class="field-label" for="glossaryInput">Custom words — one per line: wrong =&gt; right. Applied to what you say and to the translation.</label>
+      <textarea id="glossaryInput" data-pref="glossary" rows="3" placeholder="shayan => Shayan"></textarea>
+    </div>
+
+    <div class="setting-group">
+      <h3>Sounds &amp; speech</h3>
+      <label class="toggle-row"><input type="checkbox" data-pref="soundsOn" /><span>Play gentle sounds</span></label>
+      <label class="select-row"><span>Volume</span><input type="range" min="0" max="1" step="0.05" data-pref="soundVolume" data-type="number" /></label>
+      <label class="select-row"><span>Speak speed</span>
+        <select data-pref="playbackRate" data-type="number">
+          <option value="0.75">Slower</option>
+          <option value="1">Normal</option>
+          <option value="1.25">Faster</option>
+          <option value="1.5">Fastest</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="setting-group">
+      <h3>Saved language pairs</h3>
+      <div class="pair-row">
+        <select id="pairSelect"><option value="">Saved pairs…</option></select>
+        <button id="savePairBtn" type="button" title="Save the current language pair">＋ Save</button>
+        <button id="deletePairBtn" type="button" title="Delete the selected pair">🗑</button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <h3>Privacy &amp; data</h3>
+      <label class="toggle-row"><input type="checkbox" data-pref="clearAfterInsert" /><span>Clear panel text right after typing</span></label>
+      <div class="button-row">
+        <button id="downloadTranscriptBtn" type="button">⬇ Download transcript</button>
+        <button id="shortcutsBtn" type="button">⌨ Edit shortcuts</button>
+      </div>
+      <small id="statsLine" class="stats-line"></small>
+      <button id="resetStatsBtn" type="button" class="link-btn">Reset counts</button>
+    </div>
+  </details>
+
   <footer>
     <small>Click into the field on the page you want text typed into before or while speaking. If direct typing isn't possible on a site, the translation is copied automatically — paste with Ctrl+V.</small>
   </footer>
 
+  <script src="lib/text-utils.js"></script>
+  <script src="lib/voice-commands.js"></script>
+  <script src="lib/stats.js"></script>
+  <script src="lib/sounds.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

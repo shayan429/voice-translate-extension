@@ -14,6 +14,27 @@
   "action": {
     "default_title": "Open Voice Translator"
   },
+  "commands": {
+    "toggle-listening": {
+      "suggested_key": { "default": "Alt+Shift+V" },
+      "description": "Start or stop listening (translate and insert)"
+    },
+    "toggle-listening-submit": {
+      "suggested_key": { "default": "Alt+Shift+S" },
+      "description": "Start or stop listening, then press Enter after inserting"
+    },
+    "undo-last": {
+      "suggested_key": { "default": "Alt+Shift+Z" },
+      "description": "Undo the last voice insertion"
+    },
+    "repeat-last": {
+      "suggested_key": { "default": "Alt+Shift+R" },
+      "description": "Insert the last translation again"
+    },
+    "cancel-processing": {
+      "description": "Cancel the translation in progress"
+    }
+  },
   "side_panel": {
     "default_path": "sidepanel.html"
   },
