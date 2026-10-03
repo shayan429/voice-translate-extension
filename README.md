@@ -2,7 +2,7 @@
 
 Speak in one language, see it transcribed live, get an instant translation, hear it spoken back, and have it typed automatically into whatever text field you're using — including fields inside iframes.
 
-Defaults to Urdu → English; 19 languages are built in.
+Defaults to Urdu → English; 39 languages are built in.
 
 ## Install (unpacked)
 
@@ -39,7 +39,18 @@ When you're on one of these sites, the panel shows a heads-up, and if a direct t
 
 If you want guaranteed, first-class Google Docs support, the real fix is connecting to Google's official Docs API with your own Google account (OAuth). That's a separate, bigger feature — happy to build it if you want it.
 
-## What's new in this version
+## What's new in 1.3.0
+
+Everything below is off by default unless noted, so the extension behaves as before until you turn something on (open **⚙ Settings** in the side panel).
+
+- **39 languages** (including Tamil and Gujarati) and a **Conversation mode** that swaps languages after each turn.
+- **Keyboard shortcuts** (change them at `chrome://extensions/shortcuts`): Alt+Shift+V start/stop listening, Alt+Shift+S start/stop and press Enter, plus undo last, repeat last and cancel.
+- **Push-to-talk:** a Hold to talk button or a key you choose (F9, Pause, Right Ctrl and more) listens only while held.
+- **Safer typing:** refuses password/payment fields; optionally type at the cursor, stick to one field, pause if you switch tabs, or press Enter afterwards; undo removes only what was typed; duplicate phrases are never typed twice.
+- **More reliable:** cancel in-flight translation (Esc), offline queue, one-click retry, one mic session at a time, mic permission pre-check, clean-up when the panel closes.
+- **Extras:** voice commands (English), auto punctuation, custom word list, silence timeout, noise filter, sounds, speaking speed, saved language pairs, local counts-only stats, transcript download, and a red toolbar icon while listening.
+
+## What was new in 1.2
 
 - **Works across iframes.** A lot of real editors (embedded comment boxes, chat widgets, form builders) live inside a nested iframe, not the page's main frame. Each frame now reports when one of its fields is focused, so typing gets routed to the exact frame holding the cursor.
 - **Never leaves you empty-handed.** If direct typing fails for any reason, the translation is copied to your clipboard automatically with a clear "paste with Ctrl+V" message.
