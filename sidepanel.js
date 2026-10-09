@@ -705,7 +705,9 @@ async function refreshOfflineStatus() {
 }
 
 function offlineSpeechMessage(status, language, online) {
-  if (online) return "Can't reach Google's speech service. Check your connection and tap the mic to try again.";
+  if (online) {
+    return "Chrome couldn't reach Google's speech service, even though you're online. A firewall, VPN, proxy or antivirus can block it, or Google may be having a short outage. Try again in a moment, or turn off any VPN.";
+  }
   if (status === "downloadable" || status === "downloading") {
     return `You're offline, and the on-device ${language} speech pack isn't downloaded yet. Connect to the internet once and press “Download offline packs” in Settings.`;
   }
@@ -948,6 +950,16 @@ async function startListening() {
       } else if (!navigator.onLine) {
         reportError(offlineSpeechMessage(localStatus, langName(sourceLangSelect.value), false));
         return;
+      }
+    }
+    // After letting go, Chrome still needs about a second to finish the last
+    // phrase. Starting a new session over it would cut that phrase off, so
+    // wait for it to end first (its text is still translated and typed).
+    if (recognitionActive && recognition) {
+      setStatus("Finishing the last phrase…");
+      const waitStart = Date.now();
+      while (recognitionActive && Date.now() - waitStart < 2500) {
+        await new Promise((r) => setTimeout(r, 50));
       }
     }
     discardRecognition();
