@@ -154,6 +154,16 @@
     </div>
 
     <div class="setting-group">
+      <h3>Offline (no internet)</h3>
+      <label class="toggle-row"><input type="checkbox" data-pref="preferOnDevice" /><span>Always use on-device speech and translation when Chrome supports the language</span></label>
+      <small id="offlineStatus" class="stats-line"></small>
+      <div class="button-row">
+        <button id="downloadOfflineBtn" type="button">⬇ Download offline packs (needs internet once)</button>
+      </div>
+      <small class="stats-line">With no internet, the extension switches to on-device speech and translation automatically if the packs are downloaded. Chrome only offers them for some languages — the line above shows your current pair.</small>
+    </div>
+
+    <div class="setting-group">
       <h3>Saved language pairs</h3>
       <div class="pair-row">
         <select id="pairSelect"><option value="">Saved pairs…</option></select>

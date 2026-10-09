@@ -71,6 +71,7 @@ const DEFAULT_PREFS = {
   soundVolume: 0.5,
   playbackRate: 1,
   clearAfterInsert: false,
+  preferOnDevice: false,
   savedPairs: [],
 };
 const MAX_SAVED_PAIRS = 10;
@@ -105,6 +106,8 @@ const downloadTranscriptBtn = document.getElementById("downloadTranscriptBtn");
 const shortcutsBtn = document.getElementById("shortcutsBtn");
 const statsLineEl = document.getElementById("statsLine");
 const resetStatsBtn = document.getElementById("resetStatsBtn");
+const downloadOfflineBtn = document.getElementById("downloadOfflineBtn");
+const offlineStatusEl = document.getElementById("offlineStatus");
 
 let prefs = { ...DEFAULT_PREFS };
 let glossaryEntries = [];
@@ -464,6 +467,7 @@ let submitOnce = false;
 let pendingSubmit = false;
 let pttActive = false;
 let pttReleasedEarly = false; // key let go while the mic was still starting
+let sessionLocal = false; // this session recognises speech on the device instead of online
 const processedPids = new Set();
 const sessionLog = []; // in memory only — built into a file only when "Download transcript" is pressed
 
@@ -636,11 +640,122 @@ function scheduleInterimTranslate(text, bailGen) {
   }
 }
 
+/* ---------- On-device (offline) speech and translation ---------- */
+
+// Chrome can recognise speech and translate on the device for some languages
+// once a language pack has been downloaded. Everything here is feature-
+// detected, so older Chrome versions simply report "unavailable".
+const LOCAL_LANG = { "zh-CN": "zh", "zh-TW": "zh-Hant" };
+const localLang = (code) => LOCAL_LANG[code] || code;
+const localTranslators = new Map();
+
+// "available" | "downloadable" | "downloading" | "unavailable"
+async function speechLocalStatus(speechCode) {
+  const R = SpeechRecognitionCtor;
+  if (!R || typeof R.available !== "function") return "unavailable";
+  try {
+    const status = await R.available({ langs: [speechCode], processLocally: true });
+    if (status === true) return "available";
+    return typeof status === "string" ? status : "unavailable";
+  } catch (err) {
+    return "unavailable";
+  }
+}
+
+async function localTranslatorStatus(src, tgt) {
+  if (typeof Translator === "undefined") return "unavailable";
+  try {
+    return await Translator.availability({ sourceLanguage: localLang(src), targetLanguage: localLang(tgt) });
+  } catch (err) {
+    return "unavailable";
+  }
+}
+
+async function getLocalTranslator(src, tgt) {
+  const key = `${src}>${tgt}`;
+  if (localTranslators.has(key)) return localTranslators.get(key);
+  if ((await localTranslatorStatus(src, tgt)) !== "available") return null;
+  try {
+    const t = await Translator.create({ sourceLanguage: localLang(src), targetLanguage: localLang(tgt) });
+    localTranslators.set(key, t);
+    return t;
+  } catch (err) {
+    return null;
+  }
+}
+
+// Returns the translation, or null when this language pair isn't ready on-device.
+async function translateLocally(text, src, tgt, signal) {
+  const t = await getLocalTranslator(src, tgt);
+  if (!t) return null;
+  return await t.translate(text, signal ? { signal } : undefined);
+}
+
+function readinessWord(status) {
+  if (status === "available") return "ready offline";
+  if (status === "downloadable" || status === "downloading") return "needs a download";
+  return "not supported offline";
+}
+
+async function refreshOfflineStatus() {
+  const src = sourceLangSelect.value;
+  const tgt = targetLangSelect.value;
+  const [speech, translation] = await Promise.all([speechLocalStatus(speechCodeFor(src)), localTranslatorStatus(src, tgt)]);
+  offlineStatusEl.textContent = `${langName(src)} → ${langName(tgt)}: speech ${readinessWord(speech)}, translation ${readinessWord(translation)}.`;
+}
+
+function offlineSpeechMessage(status, language, online) {
+  if (online) return "Can't reach Google's speech service. Check your connection and tap the mic to try again.";
+  if (status === "downloadable" || status === "downloading") {
+    return `You're offline, and the on-device ${language} speech pack isn't downloaded yet. Connect to the internet once and press “Download offline packs” in Settings.`;
+  }
+  return `You're offline, and Chrome can't recognise ${language} speech without internet (no on-device support). Connect to the internet to dictate in ${language}.`;
+}
+
+// The online speech service can't be reached mid-session: carry on with
+// on-device recognition if this language has it.
+async function switchToLocalSpeech() {
+  if (sessionLocal || !isListening) return false;
+  if ((await speechLocalStatus(speechCodeFor(sessionLangs.src))) !== "available") return false;
+  clearTimeout(restartTimer);
+  discardRecognition();
+  sessionLocal = true;
+  consecutiveErrors = 0;
+  try {
+    recognition = createRecognition();
+    recognition.start();
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+async function handleNetworkSpeechError(failed) {
+  if (await switchToLocalSpeech()) {
+    setStatus("Can't reach the online speech service — switched to on-device speech.");
+    return;
+  }
+  if (failed !== recognition || !isListening) return; // already replaced or stopped
+  if (consecutiveErrors >= 3 || !navigator.onLine) {
+    // Don't keep hammering a service that isn't there.
+    const status = await speechLocalStatus(speechCodeFor(sessionLangs.src));
+    stopListening({ keepError: true });
+    reportError(offlineSpeechMessage(status, langName(sessionLangs.src), navigator.onLine), {
+      text: "Speech recognition needs a connection here.",
+      label: "Try again",
+      run: () => startListening(),
+    });
+  } else {
+    setStatus("Speech service hiccup — retrying…");
+  }
+}
+
 function createRecognition() {
   const r = new SpeechRecognitionCtor();
   r.continuous = prefs.continuous !== false;
   r.interimResults = true;
   r.lang = speechCodeFor(sessionLangs.src);
+  if (sessionLocal) r.processLocally = true;
   // Chrome's speech engine can return several competing guesses per
   // phrase, each with its own confidence score. Asking for more than one
   // and picking the highest-confidence guess (instead of always the
@@ -728,7 +843,12 @@ function createRecognition() {
     } else if (event.error === "audio-capture") {
       reportError(message, { text: "Plug in or enable a microphone.", label: "Try again", run: () => startListening() });
     } else if (event.error === "network") {
-      reportError(message, { text: "The speech service couldn't be reached.", label: "Try again", run: () => startListening() });
+      handleNetworkSpeechError(r);
+      return;
+    } else if (event.error === "language-not-supported") {
+      reportError(`On-device speech isn't ready for ${langName(sessionLangs.src)}. Connect to the internet and press “Download offline packs” in Settings.`);
+      stopListening({ keepError: true });
+      return;
     } else {
       reportError(message);
     }
@@ -818,7 +938,20 @@ async function startListening() {
       reportError("Microphone blocked. Allow it in Chrome's microphone settings, then tap the mic again.");
       return;
     }
+    // Offline (or on-device preferred): use Chrome's on-device speech pack if
+    // there is one; if not, say so clearly instead of failing with a network error.
+    let useLocal = false;
+    if (!navigator.onLine || prefs.preferOnDevice) {
+      const localStatus = await speechLocalStatus(speechCodeFor(sourceLangSelect.value));
+      if (localStatus === "available") {
+        useLocal = true;
+      } else if (!navigator.onLine) {
+        reportError(offlineSpeechMessage(localStatus, langName(sourceLangSelect.value), false));
+        return;
+      }
+    }
     discardRecognition();
+    sessionLocal = useLocal;
     sessionId = Date.now().toString(36);
     phraseCounter = 0;
     sessionTypedCount = 0;
@@ -841,7 +974,7 @@ async function startListening() {
     recognition = createRecognition();
     isListening = true;
     setMicState("listening");
-    setStatus("Listening…");
+    setStatus(sessionLocal ? "Listening (on-device)…" : "Listening…");
     updatePageHint();
     try {
       recognition.start();
@@ -1043,6 +1176,14 @@ function handleTranslationFailure(item, err) {
     offlineQueue.push({ pid: item.pid, text: item.text, src: item.src, tgt: item.tgt });
     setStatus(`You're offline — ${offlineQueue.length} phrase(s) saved. They'll be translated when you're back online.`);
     countStat("offlineQueued");
+    localTranslatorStatus(item.src, item.tgt).then((status) => {
+      if (status === "available" || !offlineQueue.length) return;
+      setStatus(
+        `You're offline — ${offlineQueue.length} phrase(s) saved. Chrome has no on-device ${langName(item.src)} → ${langName(item.tgt)} translation` +
+          (status === "unavailable" ? ", so " : " yet (press “Download offline packs” in Settings while online), so ") +
+          "they'll be translated when you're back online."
+      );
+    });
     return;
   }
   failedItems.push({ pid: item.pid, text: item.text, src: item.src, tgt: item.tgt });
@@ -1101,6 +1242,16 @@ async function translateText(text, source, target, signal) {
 }
 
 async function translateWithRetry(text, source, target, attempts = 3, signal) {
+  // Offline, or on-device preferred: try Chrome's on-device translator first.
+  const preferLocal = prefs.preferOnDevice || !navigator.onLine;
+  if (preferLocal) {
+    try {
+      const local = await translateLocally(text, source, target, signal);
+      if (local != null) return local;
+    } catch (err) {
+      if (signal && signal.aborted) throw err;
+    }
+  }
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     if (signal && signal.aborted) throw new DOMException("Cancelled", "AbortError");
@@ -1115,6 +1266,15 @@ async function translateWithRetry(text, source, target, attempts = 3, signal) {
       lastErr = err;
       if (signal && signal.aborted) throw err;
       await new Promise((r) => setTimeout(r, 400 * (i + 1)));
+    }
+  }
+  // The online service failed: the on-device translator is a second chance.
+  if (!preferLocal) {
+    try {
+      const local = await translateLocally(text, source, target, signal);
+      if (local != null) return local;
+    } catch (err) {
+      if (signal && signal.aborted) throw err;
     }
   }
   if (!navigator.onLine) lastErr.offline = true;
@@ -1542,7 +1702,63 @@ window.addEventListener("pagehide", () => {
   }
 });
 
+downloadOfflineBtn.addEventListener("click", async () => {
+  const src = sourceLangSelect.value;
+  const tgt = targetLangSelect.value;
+  const pairs = [[src, tgt]];
+  if (conversationModeToggle.checked) pairs.push([tgt, src]);
+  downloadOfflineBtn.disabled = true;
+  const notes = [];
+  try {
+    for (const [from, to] of pairs) {
+      const speechCode = speechCodeFor(from);
+      const speechStatus = await speechLocalStatus(speechCode);
+      if (speechStatus === "downloadable" || speechStatus === "downloading") {
+        setStatus(`Downloading the ${langName(from)} speech pack…`);
+        try {
+          const ok = await SpeechRecognitionCtor.install({ langs: [speechCode], processLocally: true });
+          if (ok === false) notes.push(`${langName(from)} speech pack couldn't be installed`);
+        } catch (err) {
+          notes.push(`${langName(from)} speech: ${err.message || "download failed"}`);
+        }
+      } else if (speechStatus === "unavailable") {
+        notes.push(`Chrome has no on-device ${langName(from)} speech`);
+      }
+      const translationStatus = await localTranslatorStatus(from, to);
+      if (translationStatus === "downloadable" || translationStatus === "downloading") {
+        try {
+          const translator = await Translator.create({
+            sourceLanguage: localLang(from),
+            targetLanguage: localLang(to),
+            monitor(m) {
+              m.addEventListener("downloadprogress", (e) => {
+                setStatus(`Downloading ${langName(from)} → ${langName(to)} translation… ${Math.round(e.loaded * 100)}%`);
+              });
+            },
+          });
+          localTranslators.set(`${from}>${to}`, translator);
+        } catch (err) {
+          notes.push(`${langName(from)} → ${langName(to)} translation: ${err.message || "download failed"}`);
+        }
+      } else if (translationStatus === "unavailable") {
+        notes.push(`Chrome has no on-device ${langName(from)} → ${langName(to)} translation`);
+      }
+    }
+  } finally {
+    downloadOfflineBtn.disabled = false;
+    refreshOfflineStatus();
+  }
+  setStatus(notes.length ? `Offline packs: ${notes.join("; ")}.` : "Offline packs are ready — it will keep working without internet.");
+});
+
+sourceLangSelect.addEventListener("change", refreshOfflineStatus);
+targetLangSelect.addEventListener("change", refreshOfflineStatus);
+document.getElementById("settingsPanel").addEventListener("toggle", refreshOfflineStatus);
+
 populateLanguages();
-loadSettings().then(consumePendingCommand);
+loadSettings().then(() => {
+  refreshOfflineStatus();
+  return consumePendingCommand();
+});
 updatePageHint();
 setMicState("idle");

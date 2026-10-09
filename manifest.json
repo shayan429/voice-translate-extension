@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Voice Translate & Dictate",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Speak in any of 39 languages, get live transcription and translation, hear it back, and have it typed into any webpage.",
   "permissions": ["storage", "activeTab", "tabs", "sidePanel", "webNavigation", "scripting"],
   "host_permissions": ["<all_urls>"],

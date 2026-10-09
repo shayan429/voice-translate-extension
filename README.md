@@ -50,6 +50,11 @@ Everything below is off by default unless noted, so the extension behaves as bef
 - **More reliable:** cancel in-flight translation (Esc), offline queue, one-click retry, one mic session at a time, mic permission pre-check, clean-up when the panel closes.
 - **Extras:** voice commands (English), auto punctuation, custom word list, silence timeout, noise filter, sounds, speaking speed, saved language pairs, local counts-only stats, transcript download, and a red toolbar icon while listening.
 
+## What's new in 1.3.1
+
+- **Offline / on-device mode.** With no internet the extension now switches to Chrome's on-device speech recognition and translation, if the language has them and the packs are downloaded (Settings → Offline → "Download offline packs", needs internet once). Chrome supports this for some languages only (e.g. English, Hindi, Spanish, Arabic); **Urdu is not supported on-device by Chrome**, so Urdu needs a connection and the panel says so instead of failing silently.
+- If Google's online speech service can't be reached, it falls back to on-device speech when available, and otherwise stops with a clear message instead of retrying forever (which is what made push-to-talk switch off by itself when offline).
+
 ## What was new in 1.2
 
 - **Works across iframes.** A lot of real editors (embedded comment boxes, chat widgets, form builders) live inside a nested iframe, not the page's main frame. Each frame now reports when one of its fields is focused, so typing gets routed to the exact frame holding the cursor.
