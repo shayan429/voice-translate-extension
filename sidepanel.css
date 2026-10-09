@@ -403,3 +403,15 @@ footer {
   border-color: #e5484f;
   color: white;
 }
+
+/* Mic is on but only listens while the push-to-talk key is held */
+#micBtn[data-state="armed"] {
+  background: #d98a00;
+  box-shadow: 0 0 0 5px rgba(217, 138, 0, 0.18);
+}
+
+#pttBtn.armed {
+  border-color: #d98a00;
+  background: #fff4dc;
+  color: #7a4b00;
+}

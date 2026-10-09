@@ -50,6 +50,10 @@ Everything below is off by default unless noted, so the extension behaves as bef
 - **More reliable:** cancel in-flight translation (Esc), offline queue, one-click retry, one mic session at a time, mic permission pre-check, clean-up when the panel closes.
 - **Extras:** voice commands (English), auto punctuation, custom word list, silence timeout, noise filter, sounds, speaking speed, saved language pairs, local counts-only stats, transcript download, and a red toolbar icon while listening.
 
+## What's new in 1.3.3
+
+- **Push-to-talk, "mic stays on" style.** In Settings you can now choose how push-to-talk works. Besides the original "hold starts and stops the mic", the new style lets you turn the mic on yourself once and leave it on: it only listens (and types) while you hold the push-to-talk key or the Hold to talk button, and you turn the mic off yourself by tapping it. The toolbar and mic button show amber while it is waiting and red while you hold the key.
+
 ## What's new in 1.3.2
 
 - Push-to-talk: pressing again right after letting go no longer cuts off the last phrase of the previous turn (the panel now waits for Chrome to finish it), and a failed connection to Google's speech service while you're online now explains the likely causes (firewall, VPN, proxy, antivirus).

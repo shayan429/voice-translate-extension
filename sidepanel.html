@@ -104,6 +104,12 @@
         </select>
       </label>
       <label class="toggle-row"><input type="checkbox" data-pref="pushToTalk" /><span>Push-to-talk: a “Hold to talk” button appears — it listens only while you hold it (or the key below)</span></label>
+      <label class="select-row"><span>Push-to-talk style</span>
+        <select data-pref="pttStyle">
+          <option value="hold">Hold starts and stops the mic</option>
+          <option value="gate">Mic stays on — I start it; hold only to speak</option>
+        </select>
+      </label>
       <label class="select-row"><span>Push-to-talk key</span>
         <select data-pref="pttKey">
           <optgroup label="Function keys">

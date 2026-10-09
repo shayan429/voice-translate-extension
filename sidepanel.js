@@ -72,6 +72,7 @@ const DEFAULT_PREFS = {
   playbackRate: 1,
   clearAfterInsert: false,
   preferOnDevice: false,
+  pttStyle: "hold",
   savedPairs: [],
 };
 const MAX_SAVED_PAIRS = 10;
@@ -220,7 +221,9 @@ function syncPttUi() {
 // Tells the person how to talk when push-to-talk changes what the mic button does.
 function updateIdleHint() {
   if (isListening || isBusy()) return;
-  setStatus(prefs.pushToTalk ? `Hold the mic button or ${pttKeyLabel()} and speak.` : "Tap the mic and start speaking.");
+  if (!prefs.pushToTalk) setStatus("Tap the mic and start speaking.");
+  else if (prefs.pttStyle === "gate") setStatus(`Tap the mic to turn it on, then hold ${pttKeyLabel()} to talk.`);
+  else setStatus(`Hold the mic button or ${pttKeyLabel()} and speak.`);
 }
 
 function onPrefControlChange(el) {
@@ -229,12 +232,16 @@ function onPrefControlChange(el) {
   else if (el.dataset.type === "number") prefs[key] = Number(el.value);
   else prefs[key] = el.value;
   if (key === "glossary") glossaryEntries = TextUtils.parseGlossary(prefs.glossary);
-  if (key === "pushToTalk" && el.checked && isListening && !pttActive) {
+  if (key === "pttStyle") {
+    resetGate();
+    if (isListening) setMicState(listeningState());
+  }
+  if (key === "pushToTalk" && el.checked && isListening && !pttActive && prefs.pttStyle !== "gate") {
     // Switching to push-to-talk while the mic is open: close it so the
     // person starts from "listens only while held".
     endListeningTurn();
   }
-  if (key === "pushToTalk" || key === "pttKey") {
+  if (key === "pushToTalk" || key === "pttKey" || key === "pttStyle") {
     syncPttUi();
     updateIdleHint();
   }
@@ -365,10 +372,12 @@ let lastReportedListening = false;
 function setMicState(state) {
   micState = state;
   micBtn.dataset.state = state;
+  const micOn = state === "listening" || state === "armed";
   micBtn.classList.toggle("listening", state === "listening");
   pttBtn.classList.toggle("held", state === "listening");
-  micBtn.setAttribute("aria-pressed", state === "listening" ? "true" : "false");
-  reportListening(state === "listening");
+  pttBtn.classList.toggle("armed", state === "armed");
+  micBtn.setAttribute("aria-pressed", micOn ? "true" : "false");
+  reportListening(micOn);
 }
 
 function reportListening(on) {
@@ -381,8 +390,60 @@ function reportListening(on) {
   }
 }
 
+// "Gate" style push-to-talk: the person starts the mic once and it stays on;
+// results are only used while the key/button is held.
+function gateMode() {
+  return !!prefs.pushToTalk && prefs.pttStyle === "gate";
+}
+let gateOpen = false;
+let gateCloseTimer = null;
+const gatePending = new Set(); // result slots opened while the key was held and not finished yet
+const GATE_DRAIN_MS = 2500;
+
+function listeningState() {
+  return gateMode() && !gateOpen ? "armed" : "listening";
+}
+
+function resetGate() {
+  gateOpen = false;
+  clearTimeout(gateCloseTimer);
+  gatePending.clear();
+}
+
+function gateDown() {
+  if (!isListening) {
+    setStatus("Tap the mic first to turn it on, then hold the key to talk.");
+    return;
+  }
+  clearTimeout(gateCloseTimer);
+  gateOpen = true;
+  setMicState("listening");
+  setStatus("Listening — release when you're done.");
+}
+
+function gateUp() {
+  if (!gateOpen) return;
+  gateOpen = false;
+  if (isListening) {
+    setMicState("armed");
+    setStatus("Mic is on — hold the key to talk, tap the mic to turn it off.");
+  }
+  // Whatever you were saying when you let go is still finished and typed. If
+  // Chrome hasn't wrapped it up shortly, ask it to, so nothing lingers.
+  clearTimeout(gateCloseTimer);
+  gateCloseTimer = setTimeout(() => {
+    if (isListening && gatePending.size && recognition) {
+      try {
+        recognition.stop(); // finishes the phrase; the normal restart then re-arms the mic
+      } catch (err) {
+        /* already stopping */
+      }
+    }
+  }, GATE_DRAIN_MS);
+}
+
 function refreshIdleState() {
-  if (isListening) return setMicState("listening");
+  if (isListening) return setMicState(listeningState());
   if (isBusy()) return setMicState("processing");
   if (micState === "error") return;
   setMicState(sessionHadOutput ? "finished" : "idle");
@@ -764,6 +825,7 @@ function createRecognition() {
   // first) genuinely improves accuracy — this was previously left at the
   // default of 1, silently discarding better matches Chrome already had.
   r.maxAlternatives = 5;
+  const seenSlots = new Map(); // result slot -> "keep" | "skip" (gate-style push-to-talk)
 
   // Picks the best-scoring alternative out of everything Chrome offered
   // for this phrase, instead of just alternative [0].
@@ -781,6 +843,17 @@ function createRecognition() {
     let interim = "";
     let hadFinal = false;
     for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (gateMode()) {
+        // A phrase belongs to this press if it began while the key was held.
+        // Anything that began before or after is ignored, however long it runs.
+        if (!seenSlots.has(i)) seenSlots.set(i, gateOpen ? "keep" : "skip");
+        if (seenSlots.get(i) === "keep") {
+          if (event.results[i].isFinal) gatePending.delete(i);
+          else gatePending.add(i);
+        } else {
+          continue;
+        }
+      }
       const alt = bestAlternative(event.results[i]);
       const transcript = alt.transcript;
       if (event.results[i].isFinal) {
@@ -825,6 +898,8 @@ function createRecognition() {
   r.onstart = () => {
     if (r !== recognition) return;
     recognitionActive = true;
+    seenSlots.clear(); // each start() numbers its results from zero again
+    gatePending.clear();
     // A session actually started, so the origin already has mic permission —
     // hide the "grant permission" hint if it was showing from a prior attempt.
     permissionHintEl.style.display = "none";
@@ -897,14 +972,17 @@ function armSilenceTimer() {
 
 function restartRecognition() {
   if (!isListening) return;
+  const restartedStatus = () => {
+    if (!gateMode()) setStatus("Listening…");
+  };
   try {
     recognition.start();
-    setStatus("Listening…");
+    restartedStatus();
   } catch (err) {
     try {
       recognition = createRecognition();
       recognition.start();
-      setStatus("Listening…");
+      restartedStatus();
     } catch (err2) {
       reportError("Mic stopped unexpectedly — tap the mic to restart.");
       stopListening({ keepError: true });
@@ -985,8 +1063,15 @@ async function startListening() {
     translatedTextEl.textContent = "";
     recognition = createRecognition();
     isListening = true;
-    setMicState("listening");
-    setStatus(sessionLocal ? "Listening (on-device)…" : "Listening…");
+    resetGate();
+    setMicState(listeningState());
+    setStatus(
+      gateMode()
+        ? "Mic is on — hold the key to talk, tap the mic to turn it off."
+        : sessionLocal
+          ? "Listening (on-device)…"
+          : "Listening…"
+    );
     updatePageHint();
     try {
       recognition.start();
@@ -1022,6 +1107,7 @@ async function startListening() {
 // replacing it with a plain "Stopped.".
 function stopListening(options = {}) {
   isListening = false;
+  resetGate();
   clearTimeout(restartTimer);
   clearTimeout(silenceTimer);
   if (!options.keepError) setStatus("Stopped.");
@@ -1084,7 +1170,7 @@ micBtn.addEventListener("click", (e) => {
   // Push-to-talk mode: the button is hold-to-talk (handled by the pointer
   // events below), so a mouse click must not also toggle. Keyboard activation
   // (Enter/Space, detail 0) still toggles so the button stays usable without a mouse.
-  if (prefs.pushToTalk && e.detail > 0) return;
+  if (prefs.pushToTalk && !gateMode() && e.detail > 0) return;
   pttActive = false;
   if (isListening) {
     endListeningTurn();
@@ -1566,6 +1652,7 @@ function handlePanelCommand(name, payload) {
 // Hold to talk: press starts listening, release ends the turn. A mic that
 // was already running when the key went down is left alone.
 function pttDown() {
+  if (gateMode()) return gateDown();
   if (starting) return;
   if (isListening) {
     // The mic was already on (started by a click or a shortcut). Take it
@@ -1579,6 +1666,7 @@ function pttDown() {
 }
 
 function pttUp() {
+  if (gateMode()) return gateUp();
   if (!pttActive) return;
   if (starting) {
     pttReleasedEarly = true;
@@ -1643,8 +1731,19 @@ window.addEventListener("blur", pttUp);
 // The mic button and the "Hold to talk" button are both hold-to-talk while
 // push-to-talk is on.
 function attachHoldToTalk(btn) {
+  const isMainMic = btn === micBtn;
   btn.addEventListener("pointerdown", (e) => {
     if (!prefs.pushToTalk || e.button !== 0) return;
+    if (gateMode()) {
+      if (isMainMic) return; // the mic button stays a normal on/off switch in this style
+      try {
+        btn.setPointerCapture(e.pointerId);
+      } catch (err) {
+        /* capture is a nicety */
+      }
+      gateDown();
+      return;
+    }
     if (isListening && !pttActive) {
       // Already listening from before: a press switches it off, otherwise
       // push-to-talk mode would give no way to stop it.
@@ -1659,10 +1758,10 @@ function attachHoldToTalk(btn) {
     pttDown();
   });
   btn.addEventListener("pointerup", () => {
-    if (prefs.pushToTalk) pttUp();
+    if (prefs.pushToTalk && !(gateMode() && isMainMic)) pttUp();
   });
   btn.addEventListener("pointercancel", () => {
-    if (prefs.pushToTalk) pttUp();
+    if (prefs.pushToTalk && !(gateMode() && isMainMic)) pttUp();
   });
 }
 attachHoldToTalk(micBtn);
